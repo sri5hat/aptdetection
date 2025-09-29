@@ -17,6 +17,8 @@ const exfilDomain = 'transfer.sh';
 const exfilIp = '185.199.108.153'; // Example IP, not live
 const sensitiveFile = 'C:\\Users\\dsmith\\Documents\\project_europa_brief.docx';
 const stagingFile = `C:\\Users\\dsmith\\AppData\\Local\\Temp\\archive.zip`;
+const dnsExfilDomain = 'c2-server-blog.com';
+
 
 const scenario = [
   // 1. Discovery: User accesses a sensitive file
@@ -36,7 +38,7 @@ const scenario = [
       topFeatures: ['process:powershell.exe', 'cmdline:Compress-Archive', `file_path:${stagingFile}`],
     });
   },
-  // 3. Exfiltration: Compressed file is uploaded to a known file sharing site
+  // 3. Exfiltration via large upload
   () => {
     emitLog(`[net] src=${scenarioHost} dst=${exfilIp}:443 protocol=tcp bytes_sent=12582912`, 'CRITICAL');
     emitAlert({
@@ -47,6 +49,20 @@ const scenario = [
       evidence: `Large upload (12.5MB) to ${exfilDomain} (${exfilIp})`,
       topRuleHits: ['Exfiltration to File Sharing Site', 'Anomalous Data Transfer Size'],
       topFeatures: [`dst_ip:${exfilIp}`, 'bytes_sent>10MB', `domain:${exfilDomain}`],
+    });
+  },
+  // 4. DNS Tunneling Exfiltration (more stealthy)
+  () => {
+    const encodedData = '4a6f686e20446f65207061796c6f6164'; // "some data payload"
+    emitLog(`[dns] host=${scenarioHost} query=${encodedData}.${dnsExfilDomain} type=A`, 'WARNING');
+     emitAlert({
+      alertType: 'DNSExfiltration',
+      host: scenarioHost,
+      score: 0.88,
+      mitreTactic: 'Exfiltration',
+      evidence: `Anomalous DNS query pattern detected to ${dnsExfilDomain}`,
+      topRuleHits: ['DNS Tunneling Heuristic', 'High-entropy Subdomain'],
+      topFeatures: [`domain:${dnsExfilDomain}`, 'query_length>64', 'entropy_level:high'],
     });
   },
 ];

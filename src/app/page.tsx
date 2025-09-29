@@ -36,6 +36,7 @@ const MITRE_TACTICS = [
 ];
 const ALERT_TYPES = [
   'DataExfiltration',
+  'DNSExfiltration',
   'FileStaging',
   'NetworkAnomaly',
   'ProcessAnomaly',

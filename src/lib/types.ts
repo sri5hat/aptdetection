@@ -11,6 +11,7 @@ export type MitreTactic =
 
 export type AlertType =
   | 'DataExfiltration'
+  | 'DNSExfiltration'
   | 'FileStaging'
   | 'NetworkAnomaly'
   | 'ProcessAnomaly'
