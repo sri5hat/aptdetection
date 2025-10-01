@@ -16,6 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { type Alert } from '@/lib/types';
 import { ScoreExplainer } from './score-explainer';
 import { ReactNode } from 'react';
+import { AlertJustification } from './alert-justification';
 
 interface AlertDetailModalProps {
   alert: Alert;
@@ -35,6 +36,8 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
+           <AlertJustification alert={alert} />
+
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Time</p>

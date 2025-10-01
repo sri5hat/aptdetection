@@ -48,7 +48,7 @@ const prompt = ai.definePrompt({
 
   You will receive information about an alert, including its type, score, MITRE ATT&CK tactic, evidence, and top contributing features.
 
-  Your task is to provide a concise human-readable justification for the alert, highlighting the key factors that contributed most to the alert.
+  Your task is to provide a concise, single-sentence, human-readable justification for the alert, explaining *why* it's suspicious, based on the provided data. Start your justification directly without any preamble like "This alert is...".
 
   Alert Type: {{{alertType}}}
   Score: {{{score}}}
