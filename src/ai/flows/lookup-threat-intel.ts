@@ -18,13 +18,13 @@ const LookupThreatIntelInputSchema = z.object({
 
 export type LookupThreatIntelInput = z.infer<typeof LookupThreatIntelInputSchema>;
 
-export const LookupThreatIntelOutput = z.object({
+const LookupThreatIntelOutputSchema = z.object({
   isMalicious: z.boolean().describe('Whether the indicator is considered malicious.'),
   knownFor: z.array(z.string()).describe('A list of threat categories the indicator is associated with (e.g., Brute Force, C2, Malware).'),
   reportSummary: z.string().describe('A short, one-sentence summary of the threat intelligence findings.'),
 });
 
-export type LookupThreatIntelOutput = z.infer<typeof LookupThreatIntelOutput>;
+export type LookupThreatIntelOutput = z.infer<typeof LookupThreatIntelOutputSchema>;
 
 export async function lookupThreatIntel(
   input: LookupThreatIntelInput
@@ -35,7 +35,7 @@ export async function lookupThreatIntel(
 const prompt = ai.definePrompt({
   name: 'lookupThreatIntelPrompt',
   input: { schema: LookupThreatIntelInputSchema },
-  output: { schema: LookupThreatIntelOutput },
+  output: { schema: LookupThreatIntelOutputSchema },
   prompt: `You are a threat intelligence provider.
   You are given an indicator (IP address, domain, or file hash).
   Based on the indicator, you need to generate a realistic but FAKE threat intelligence report.
@@ -52,7 +52,7 @@ const lookupThreatIntelFlow = ai.defineFlow(
   {
     name: 'lookupThreatIntelFlow',
     inputSchema: LookupThreatIntelInputSchema,
-    outputSchema: LookupThreatIntelOutput,
+    outputSchema: LookupThreatIntelOutputSchema,
   },
   async (input) => {
     const { output } = await prompt(input);

@@ -11,7 +11,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
-import { lookupThreatIntel, LookupThreatIntelOutput } from './lookup-threat-intel';
+import { lookupThreatIntel, type LookupThreatIntelOutput as ThreatIntelOutput } from './lookup-threat-intel';
 
 const GenerateIncidentReportInputSchema = z.object({
   alert: z.object({
@@ -42,13 +42,21 @@ export async function generateIncidentReport(
   return generateIncidentReportFlow(input);
 }
 
+// Define the schema for the threat intel tool's output here.
+const LookupThreatIntelOutputSchema = z.object({
+  isMalicious: z.boolean().describe('Whether the indicator is considered malicious.'),
+  knownFor: z.array(z.string()).describe('A list of threat categories the indicator is associated with (e.g., Brute Force, C2, Malware).'),
+  reportSummary: z.string().describe('A short, one-sentence summary of the threat intelligence findings.'),
+});
+
+
 // Define a tool to get threat intel for the source IP
 const getThreatIntelTool = ai.defineTool(
   {
     name: 'getThreatIntelForIp',
     description: 'Gets threat intelligence information for a given IP address.',
     inputSchema: z.object({ ip: z.string() }),
-    outputSchema: LookupThreatIntelOutput,
+    outputSchema: LookupThreatIntelOutputSchema,
   },
   async ({ ip }) => {
     return await lookupThreatIntel({ indicator: ip });
