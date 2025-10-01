@@ -6,7 +6,23 @@ The dashboard is designed to be the frontend for a real security monitoring back
 
 ## Getting Started
 
-To get started with the frontend, take a look at `src/app/page.tsx`. The application will start with a simulated data exfiltration scenario running.
+To run the ExfilSense dashboard on your local machine, follow these steps:
+
+1.  **Install Dependencies:**
+    First, you need to install all the required Node.js packages listed in `package.json`. Open your terminal in the project's root directory and run:
+    ```bash
+    npm install
+    ```
+
+2.  **Run the Development Server:**
+    Once the dependencies are installed, you can start the Next.js development server. Run the following command:
+    ```bash
+    npm run dev
+    ```
+    This will start the application in development mode with Turbopack for faster performance.
+
+3.  **View the Dashboard:**
+    Open your web browser and navigate to [http://localhost:9002](http://localhost:9002). The application will start with a simulated data exfiltration scenario running.
 
 ## Integrating a Python Backend Agent
 
