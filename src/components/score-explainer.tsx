@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -9,6 +10,7 @@ import { getExplanation } from '@/app/actions/scoring';
 import { Button } from './ui/button';
 import { Bot, Lightbulb } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
+import { Separator } from './ui/separator';
 
 interface ScoreExplainerProps {
   alert: Alert;
