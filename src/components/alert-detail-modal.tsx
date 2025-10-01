@@ -1,4 +1,3 @@
-
 'use client';
 
 import {
@@ -18,6 +17,8 @@ import { type Alert } from '@/lib/types';
 import { ScoreExplainer } from './score-explainer';
 import { ReactNode, useEffect, useState } from 'react';
 import { AlertJustification } from './alert-justification';
+import { Download } from 'lucide-react';
+import { getIncidentReport } from '@/app/actions/report';
 
 interface AlertDetailModalProps {
   alert: Alert;
@@ -27,10 +28,35 @@ interface AlertDetailModalProps {
 
 export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDetailModalProps) {
   const [isClient, setIsClient] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  const handleDownloadReport = async () => {
+    setIsGeneratingReport(true);
+    try {
+      const { report } = await getIncidentReport({ alert });
+      
+      const blob = new Blob([report], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `incident-report-${alert.id}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+      // You could show a toast notification here
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  };
+
 
   return (
     <Dialog>
@@ -95,9 +121,15 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
             <Textarea placeholder="Add investigation notes here..." rows={4} />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => updateAlertStatus(alert.id, 'Investigating')}>Mark as Investigating</Button>
-          <Button onClick={() => updateAlertStatus(alert.id, 'Resolved')}>Resolve Alert</Button>
+        <DialogFooter className="sm:justify-between">
+           <Button variant="secondary" onClick={handleDownloadReport} disabled={isGeneratingReport}>
+              <Download className="mr-2 h-4 w-4" />
+              {isGeneratingReport ? 'Generating...' : 'Download Report'}
+            </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => updateAlertStatus(alert.id, 'Investigating')}>Mark as Investigating</Button>
+            <Button onClick={() => updateAlertStatus(alert.id, 'Resolved')}>Resolve Alert</Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

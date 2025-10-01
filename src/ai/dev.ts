@@ -3,3 +3,5 @@ config();
 
 import '@/ai/flows/explainable-composite-scoring.ts';
 import '@/ai/flows/provide-alert-justification.ts';
+import '@/ai/flows/lookup-threat-intel.ts';
+import '@/ai/flows/generate-incident-report.ts';
