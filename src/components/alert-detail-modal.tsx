@@ -16,9 +16,10 @@ import { Separator } from '@/components/ui/separator';
 import { type Alert } from '@/lib/types';
 import { ScoreExplainer } from './score-explainer';
 import { ReactNode, useEffect, useState } from 'react';
-import { AlertJustification } from './alert-justification';
-import { Download } from 'lucide-react';
+import { Download, Lightbulb } from 'lucide-react';
 import { getIncidentReport } from '@/app/actions/report';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Skeleton } from './ui/skeleton';
 
 interface AlertDetailModalProps {
   alert: Alert;
@@ -29,37 +30,54 @@ interface AlertDetailModalProps {
 export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDetailModalProps) {
   const [isClient, setIsClient] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [report, setReport] = useState<string | null>(null);
+  const [justification, setJustification] = useState<string | null>(null);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+  
+  useEffect(() => {
+    if (!isOpen) return;
 
-  const handleDownloadReport = async () => {
-    setIsGeneratingReport(true);
-    try {
-      const { report } = await getIncidentReport({ alert });
-      
-      const blob = new Blob([report], { type: 'text/plain' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `incident-report-${alert.id}.txt`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
+    const generateReport = async () => {
+      setIsGeneratingReport(true);
+      setReport(null);
+      setJustification(null);
+      try {
+        const { report, justification } = await getIncidentReport({ alert });
+        setReport(report);
+        setJustification(justification);
+      } catch (error) {
+        console.error("Failed to generate report:", error);
+        setJustification("Could not generate an AI justification for this alert.");
+        setReport("Failed to generate incident report.");
+      } finally {
+        setIsGeneratingReport(false);
+      }
+    };
+    generateReport();
 
-    } catch (error) {
-      console.error("Failed to generate report:", error);
-      // You could show a toast notification here
-    } finally {
-      setIsGeneratingReport(false);
-    }
+  }, [isOpen, alert]);
+
+  const handleDownloadReport = () => {
+    if (!report) return;
+    
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `incident-report-${alert.id}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
@@ -69,7 +87,27 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-6 py-4">
-           <AlertJustification alert={alert} />
+          <Card className="bg-muted/30 border-primary/20">
+            <CardHeader className='p-4'>
+                <div className='flex items-center gap-3'>
+                    <Lightbulb className="h-6 w-6 text-primary" />
+                    <div className='flex flex-col'>
+                     <CardTitle className="text-lg text-primary">AI Generated Justification</CardTitle>
+                    </div>
+                </div>
+            </CardHeader>
+            <CardContent className='p-4 pt-0'>
+                {isGeneratingReport ? (
+                    <Skeleton className="h-5 w-full" />
+                ) : (
+                    justification && (
+                        <p className="text-sm text-foreground">
+                            {justification}
+                        </p>
+                    )
+                )}
+            </CardContent>
+          </Card>
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="space-y-1">
@@ -122,7 +160,7 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
           </div>
         </div>
         <DialogFooter className="sm:justify-between">
-           <Button variant="secondary" onClick={handleDownloadReport} disabled={isGeneratingReport}>
+           <Button variant="secondary" onClick={handleDownloadReport} disabled={isGeneratingReport || !report}>
               <Download className="mr-2 h-4 w-4" />
               {isGeneratingReport ? 'Generating...' : 'Download Report'}
             </Button>

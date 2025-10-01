@@ -25,6 +25,7 @@ const GenerateIncidentReportInputSchema = z.object({
     dstIp: z.string(),
     evidence: z.string(),
     status: z.string(),
+    topFeatures: z.array(z.string()),
   }),
 });
 
@@ -32,6 +33,7 @@ export type GenerateIncidentReportInput = z.infer<typeof GenerateIncidentReportI
 
 const GenerateIncidentReportOutputSchema = z.object({
   report: z.string().describe('The full, formatted incident report as a single string.'),
+  justification: z.string().describe('A concise, single-sentence, human-readable justification for the alert, explaining *why* it is suspicious.')
 });
 
 export type GenerateIncidentReportOutput = z.infer<typeof GenerateIncidentReportOutputSchema>;
@@ -69,13 +71,13 @@ const prompt = ai.definePrompt({
   input: { schema: GenerateIncidentReportInputSchema },
   output: { schema: GenerateIncidentReportOutputSchema },
   tools: [getThreatIntelTool],
-  prompt: `You are a Tier 1 SOC Analyst responsible for writing initial incident reports.
+  prompt: `You are a Tier 1 SOC Analyst responsible for writing initial incident reports and providing clear alert justifications.
   
-  An alert has been triggered. Your task is to generate a detailed incident report based on the alert data provided.
+  An alert has been triggered. Your tasks are:
+  1. Generate a detailed incident report based on the alert data provided.
+  2. Provide a concise, single-sentence, human-readable justification for the alert, explaining *why* it's suspicious based on its evidence and top features. Start the justification directly, without any preamble like "This alert is...".
   
   Use the 'getThreatIntelForIp' tool to enrich the source IP address ({{{alert.srcIp}}}) with threat intelligence data.
-  
-  Use the following template for your report. Populate all fields based on the alert data and the threat intel you look up.
   
   **Incident Report Template:**
   
@@ -96,6 +98,7 @@ const prompt = ai.definePrompt({
   [Evidence]
   - Raw Evidence: {{{alert.evidence}}}
   - Alert Score: {{{alert.score}}}
+  - Top Contributing Features: {{#each alert.topFeatures}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
   - Threat Intel on Source IP: [Summarize the findings from the getThreatIntelForIp tool. Mention if it's malicious and what it's known for.]
   
   [Actions Taken]
