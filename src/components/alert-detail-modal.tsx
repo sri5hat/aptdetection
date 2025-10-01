@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -15,7 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
 import { type Alert } from '@/lib/types';
 import { ScoreExplainer } from './score-explainer';
-import { ReactNode } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { AlertJustification } from './alert-justification';
 
 interface AlertDetailModalProps {
@@ -25,6 +26,12 @@ interface AlertDetailModalProps {
 }
 
 export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDetailModalProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -41,7 +48,7 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Time</p>
-              <p className="font-mono text-sm">{new Date(alert.time).toLocaleString()}</p>
+              <p className="font-mono text-sm">{isClient ? new Date(alert.time).toLocaleString() : new Date(alert.time).toISOString()}</p>
             </div>
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground">Host</p>

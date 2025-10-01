@@ -1,3 +1,6 @@
+
+'use client';
+
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { PlusCircle } from "lucide-react";
+import { useEffect, useState } from "react";
 
 const MOCK_FEEDS = [
   {
@@ -32,6 +36,12 @@ const MOCK_FEEDS = [
 ];
 
 export default function ThreatIntelPage() {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
       <div className="grid gap-1">
@@ -129,7 +139,7 @@ export default function ThreatIntelPage() {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        {new Date(feed.lastUpdated).toLocaleString()}
+                        {isClient ? new Date(feed.lastUpdated).toLocaleString() : new Date(feed.lastUpdated).toISOString()}
                       </TableCell>
                     </TableRow>
                   ))}

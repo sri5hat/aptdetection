@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Table,
   TableHeader,
@@ -62,6 +62,12 @@ const MOCK_INCIDENTS: Incident[] = [
 
 export default function IncidentsPage() {
     const [incidents, setIncidents] = useState<Incident[]>(MOCK_INCIDENTS);
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
 
     const getStatusBadgeVariant = (status: IncidentStatus) => {
         switch (status) {
@@ -116,7 +122,7 @@ export default function IncidentsPage() {
                     <Badge variant={getStatusBadgeVariant(incident.status)}>{incident.status}</Badge>
                   </TableCell>
                   <TableCell>{incident.alerts}</TableCell>
-                  <TableCell>{new Date(incident.lastActivity).toLocaleString()}</TableCell>
+                  <TableCell>{isClient ? new Date(incident.lastActivity).toLocaleString() : new Date(incident.lastActivity).toISOString()}</TableCell>
                   <TableCell>{incident.assignee}</TableCell>
                   <TableCell>
                     <Button variant="ghost" size="sm">

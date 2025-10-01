@@ -1,3 +1,4 @@
+
 'use client';
 
 import { ArrowDown, ArrowUp } from 'lucide-react';
@@ -20,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from './ui/select';
+import { useEffect, useState } from 'react';
 
 interface AlertsTableProps {
   alerts: Alert[];
@@ -34,6 +36,12 @@ export function AlertsTable({
   requestSort,
   updateAlertStatus,
 }: AlertsTableProps) {
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
   const getSortIcon = (key: keyof Alert) => {
     if (!sortConfig || sortConfig.key !== key) {
       return null;
@@ -97,7 +105,7 @@ export function AlertsTable({
           {alerts.map((alert) => (
             <TableRow key={alert.id}>
               <TableCell className="whitespace-nowrap">
-                {new Date(alert.time).toLocaleString()}
+                {isClient ? new Date(alert.time).toLocaleString() : new Date(alert.time).toISOString()}
               </TableCell>
               <TableCell className="font-medium">{alert.host}</TableCell>
               <TableCell>
