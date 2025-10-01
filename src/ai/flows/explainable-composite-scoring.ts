@@ -117,14 +117,15 @@ const explainableCompositeScoringFlow = ai.defineFlow(
 
     const normalizedCompositeScore = Math.min(1, Math.max(0, compositeScore));
 
+    // We don't need to call the AI for the composite score calculation itself,
+    // but for the explanation based on the inputs.
     const {output} = await prompt({
-      ...input,
-      compositeScore: normalizedCompositeScore,
+      ...input
     });
+    
     return {
       ...output,
       compositeScore: normalizedCompositeScore,
     } as ExplainableCompositeScoringOutput;
   }
 );
-

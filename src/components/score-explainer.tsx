@@ -5,6 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Alert } from '@/lib/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
+import { getExplanation } from '@/app/actions/scoring';
+import { Button } from './ui/button';
+import { Bot, Lightbulb } from 'lucide-react';
+import { Skeleton } from './ui/skeleton';
 
 interface ScoreExplainerProps {
   alert: Alert;
@@ -17,8 +21,11 @@ export function ScoreExplainer({ alert }: ScoreExplainerProps) {
     supervisedClassifierWeight: 0.2,
   });
   const [compositeScore, setCompositeScore] = useState(alert.score);
+  const [explanation, setExplanation] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
+    // Recalculate score locally whenever weights or alert scores change
     const newCompositeScore =
       weights.ruleBasedWeight * alert.ruleBasedScore +
       weights.anomalyDetectionWeight * alert.anomalyDetectionScore +
@@ -26,20 +33,46 @@ export function ScoreExplainer({ alert }: ScoreExplainerProps) {
     
     const normalizedCompositeScore = Math.min(1, Math.max(0, newCompositeScore));
     setCompositeScore(normalizedCompositeScore);
+    // Clear previous explanation when weights change
+    setExplanation(null);
   }, [weights, alert]);
 
   const handleWeightChange = (type: keyof typeof weights, value: number[]) => {
     setWeights((prev) => ({ ...prev, [type]: value[0] }));
   };
 
+  const handleExplainScore = async () => {
+    setIsGenerating(true);
+    setExplanation(null);
+    try {
+      const result = await getExplanation({
+        ruleBasedScore: alert.ruleBasedScore,
+        anomalyDetectionScore: alert.anomalyDetectionScore,
+        supervisedClassifierScore: alert.supervisedClassifierScore,
+        ruleBasedWeight: weights.ruleBasedWeight,
+        anomalyDetectionWeight: weights.anomalyDetectionWeight,
+        supervisedClassifierWeight: weights.supervisedClassifierWeight,
+        topRuleHits: alert.topRuleHits,
+        topFeatures: alert.topFeatures,
+      });
+      setCompositeScore(result.compositeScore);
+      setExplanation(result.explanation);
+    } catch (error) {
+      console.error("Failed to get explanation", error);
+      setExplanation("Could not generate an AI explanation for this score configuration.");
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-      <div>
-        <h3 className="text-md font-semibold mb-4">Score Contribution Simulator</h3>
-        <p className="text-sm text-muted-foreground mb-4">
-          Adjust the weights of the detection models to see how they affect the composite score. This demonstrates the score fusion logic.
+      <div className="space-y-4">
+        <h3 className="text-md font-semibold">Score Contribution Simulator</h3>
+        <p className="text-sm text-muted-foreground">
+          Adjust the weights of the detection models to see how they affect the composite score and generate an AI-powered explanation.
         </p>
-        <div className="space-y-6">
+        <div className="space-y-6 pt-2">
           <div className="space-y-2">
             <div className="flex justify-between">
               <Label htmlFor="rule-slider">Rule-Based Heuristics</Label>
@@ -82,23 +115,41 @@ export function ScoreExplainer({ alert }: ScoreExplainerProps) {
               onValueChange={(v) => handleWeightChange('supervisedClassifierWeight', v)}
             />
           </div>
+           <Button onClick={handleExplainScore} disabled={isGenerating} className="w-full">
+            <Bot className="mr-2 h-4 w-4" />
+            {isGenerating ? 'Analyzing...' : 'Explain This Score'}
+          </Button>
         </div>
       </div>
       <Card className="bg-muted/50">
         <CardHeader>
           <CardTitle>Simulated Composite Score</CardTitle>
            <CardDescription>
-            The recalculated score based on your weight adjustments.
+            The recalculated score and AI explanation based on your adjustments.
           </CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
           <div className="space-y-2">
               <div className="flex items-baseline gap-2">
                 <p className="text-3xl font-bold text-primary">{(compositeScore * 100).toFixed(1)}</p>
                 <span className="text-sm text-muted-foreground">/ 100</span>
               </div>
-              <p className="text-sm text-foreground italic">"Original alert score was {alert.score.toFixed(2)}."</p>
+              <p className="text-sm text-foreground italic h-4">"Original alert score was {alert.score.toFixed(2)}."</p>
           </div>
+          {(isGenerating || explanation) && <Separator />}
+           {isGenerating && (
+                <div className="space-y-2 pt-2">
+                    <Skeleton className="h-4 w-1/3" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-4/5" />
+                </div>
+            )}
+          {explanation && (
+            <div className="space-y-2">
+                <h4 className="font-semibold flex items-center gap-2"><Lightbulb className="w-4 h-4 text-primary"/> AI Explanation</h4>
+                <p className="text-sm text-muted-foreground">{explanation}</p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

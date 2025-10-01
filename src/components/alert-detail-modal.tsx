@@ -16,7 +16,7 @@ import { Separator } from '@/components/ui/separator';
 import { type Alert } from '@/lib/types';
 import { ScoreExplainer } from './score-explainer';
 import { ReactNode, useEffect, useState } from 'react';
-import { Download, Lightbulb } from 'lucide-react';
+import { Download, Lightbulb, Bot } from 'lucide-react';
 import { getIncidentReport } from '@/app/actions/report';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
@@ -32,16 +32,12 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const [justification, setJustification] = useState<string | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
   
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const generateReport = async () => {
+  const handleGenerateReport = async () => {
       setIsGeneratingReport(true);
       setReport(null);
       setJustification(null);
@@ -56,10 +52,7 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
       } finally {
         setIsGeneratingReport(false);
       }
-    };
-    generateReport();
-
-  }, [isOpen, alert]);
+  };
 
   const handleDownloadReport = () => {
     if (!report) return;
@@ -77,7 +70,7 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
 
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-3xl">
         <DialogHeader>
@@ -89,24 +82,30 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
         <div className="grid gap-6 py-4">
           <Card className="bg-muted/30 border-primary/20">
             <CardHeader className='p-4'>
-                <div className='flex items-center gap-3'>
-                    <Lightbulb className="h-6 w-6 text-primary" />
-                    <div className='flex flex-col'>
-                     <CardTitle className="text-lg text-primary">AI Generated Justification</CardTitle>
+                <div className='flex items-center justify-between'>
+                    <div className='flex items-center gap-3'>
+                        <Lightbulb className="h-6 w-6 text-primary" />
+                        <CardTitle className="text-lg text-primary">AI Generated Justification</CardTitle>
                     </div>
+                     <Button size="sm" variant="ghost" onClick={handleGenerateReport} disabled={isGeneratingReport}>
+                        <Bot className="mr-2 h-4 w-4" />
+                        {isGeneratingReport ? 'Generating...' : 'Generate Report'}
+                    </Button>
                 </div>
             </CardHeader>
-            <CardContent className='p-4 pt-0'>
-                {isGeneratingReport ? (
-                    <Skeleton className="h-5 w-full" />
-                ) : (
-                    justification && (
-                        <p className="text-sm text-foreground">
-                            {justification}
-                        </p>
-                    )
-                )}
-            </CardContent>
+             {isGeneratingReport && (
+                <CardContent className='p-4 pt-0 space-y-2'>
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                </CardContent>
+            )}
+            {justification && (
+                 <CardContent className='p-4 pt-0'>
+                    <p className="text-sm text-foreground">
+                        {justification}
+                    </p>
+                </CardContent>
+            )}
           </Card>
 
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -160,9 +159,9 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
           </div>
         </div>
         <DialogFooter className="sm:justify-between">
-           <Button variant="secondary" onClick={handleDownloadReport} disabled={isGeneratingReport || !report}>
+           <Button variant="secondary" onClick={handleDownloadReport} disabled={!report}>
               <Download className="mr-2 h-4 w-4" />
-              {isGeneratingReport ? 'Generating...' : 'Download Report'}
+              Download Full Report
             </Button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={() => updateAlertStatus(alert.id, 'Investigating')}>Mark as Investigating</Button>
