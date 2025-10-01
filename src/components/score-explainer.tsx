@@ -39,10 +39,6 @@ export function ScoreExplainer({ alert }: ScoreExplainerProps) {
     setExplanation(null);
   }, [weights, alert]);
 
-  const handleWeightChange = (type: keyof typeof weights, value: number[]) => {
-    setWeights((prev) => ({ ...prev, [type]: value[0] }));
-  };
-
   const handleExplainScore = async () => {
     setIsGenerating(true);
     setExplanation(null);
@@ -136,7 +132,7 @@ export function ScoreExplainer({ alert }: ScoreExplainerProps) {
                 <p className="text-3xl font-bold text-primary">{(compositeScore * 100).toFixed(1)}</p>
                 <span className="text-sm text-muted-foreground">/ 100</span>
               </div>
-              <p className="text-sm text-foreground italic h-4">"Original alert score was {alert.score.toFixed(2)}."</p>
+              <p className="text-sm text-foreground italic h-4">Original alert score was {alert.score.toFixed(2)}.</p>
           </div>
           {(isGenerating || explanation) && <Separator />}
            {isGenerating && (

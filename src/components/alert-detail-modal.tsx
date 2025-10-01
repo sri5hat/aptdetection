@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -16,10 +17,11 @@ import { Separator } from '@/components/ui/separator';
 import { type Alert } from '@/lib/types';
 import { ScoreExplainer } from './score-explainer';
 import { ReactNode, useEffect, useState } from 'react';
-import { Download, Lightbulb, Bot } from 'lucide-react';
+import { Download, Lightbulb, Bot, FileText, Activity } from 'lucide-react';
 import { getIncidentReport } from '@/app/actions/report';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 
 interface AlertDetailModalProps {
   alert: Alert;
@@ -27,15 +29,37 @@ interface AlertDetailModalProps {
   updateAlertStatus: (id: string, status: Alert['status']) => void;
 }
 
+// Simple markdown to HTML renderer
+function Markdown({ content }: { content: string }) {
+  const html = content
+    .replace(/^# (.*$)/gim, '<h1 class="text-xl font-bold mb-4">$1</h1>')
+    .replace(/^## (.*$)/gim, '<h2 class="text-lg font-semibold mt-4 mb-2">$1</h2>')
+    .replace(/\n- (.*$)/gim, '<li class="ml-4 list-disc">$1</li>')
+    .replace(/\*\*(.*)\*\*/gim, '<strong>$1</strong>')
+    .replace(/`(.*?)`/gim, '<code class="bg-muted text-foreground font-mono text-sm px-1 py-0.5 rounded">$1</code>')
+    .replace(/\[(.*?)\]\((.*?)\)/gim, '<a href="$2" target="_blank" rel="noopener noreferrer" class="text-primary underline">$1</a>')
+    .replace(/\n/g, '<br />');
+
+  return <div dangerouslySetInnerHTML={{ __html: html }} className="prose prose-sm max-w-none" />;
+}
+
+
 export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDetailModalProps) {
-  const [isClient, setIsClient] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [report, setReport] = useState<string | null>(null);
   const [justification, setJustification] = useState<string | null>(null);
 
   useEffect(() => {
-    setIsClient(true);
-  }, []);
+    if (isOpen) {
+      handleGenerateReport();
+    } else {
+      // Reset state when modal is closed
+      setReport(null);
+      setJustification(null);
+      setIsGeneratingReport(false);
+    }
+  }, [isOpen]);
   
   const handleGenerateReport = async () => {
       setIsGeneratingReport(true);
@@ -57,11 +81,11 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
   const handleDownloadReport = () => {
     if (!report) return;
     
-    const blob = new Blob([report], { type: 'text/plain' });
+    const blob = new Blob([report], { type: 'text/markdown;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `incident-report-${alert.id}.txt`;
+    a.download = `incident-report-${alert.id}.md`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
@@ -70,104 +94,69 @@ export function AlertDetailModal({ alert, children, updateAlertStatus }: AlertDe
 
 
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl">
         <DialogHeader>
           <DialogTitle>Alert Details: {alert.id}</DialogTitle>
           <DialogDescription>
             Detailed analysis of the detected threat event from {alert.host}.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-6 py-4">
-          <Card className="bg-muted/30 border-primary/20">
-            <CardHeader className='p-4'>
-                <div className='flex items-center justify-between'>
-                    <div className='flex items-center gap-3'>
-                        <Lightbulb className="h-6 w-6 text-primary" />
-                        <CardTitle className="text-lg text-primary">AI Generated Justification</CardTitle>
-                    </div>
-                     <Button size="sm" variant="ghost" onClick={handleGenerateReport} disabled={isGeneratingReport}>
-                        <Bot className="mr-2 h-4 w-4" />
-                        {isGeneratingReport ? 'Generating...' : 'Generate Report'}
-                    </Button>
+
+        {isGeneratingReport && (
+            <div className="space-y-4 py-4">
+                <div className="flex items-center gap-3 px-1">
+                    <Bot className="h-6 w-6 text-primary animate-spin" />
+                    <p className="text-muted-foreground">Generating AI analysis and incident report...</p>
                 </div>
-            </CardHeader>
-             {isGeneratingReport && (
-                <CardContent className='p-4 pt-0 space-y-2'>
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-4 w-full" />
-                </CardContent>
-            )}
-            {justification && (
-                 <CardContent className='p-4 pt-0'>
-                    <p className="text-sm text-foreground">
-                        {justification}
-                    </p>
-                </CardContent>
-            )}
-          </Card>
+                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-40 w-full" />
+            </div>
+        )}
 
-          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Time</p>
-              <p className="font-mono text-sm">{isClient ? new Date(alert.time).toLocaleString() : new Date(alert.time).toISOString()}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Host</p>
-              <p className="text-sm">{alert.host}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Source IP</p>
-              <p className="text-sm">{alert.srcIp}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Destination IP</p>
-              <p className="text-sm">{alert.dstIp}</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Alert Type</p>
-              <Badge variant="outline">{alert.alertType}</Badge>
-            </div>
-            <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">MITRE Tactic</p>
-              <p className="text-sm">{alert.mitreTactic}</p>
-            </div>
-             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Status</p>
-              <Badge variant={alert.status === 'New' ? 'destructive' : alert.status === 'Investigating' ? 'secondary' : 'default'}>{alert.status}</Badge>
-            </div>
-             <div className="space-y-1">
-              <p className="text-sm font-medium text-muted-foreground">Score</p>
-              <Badge variant={alert.score > 0.85 ? 'destructive' : alert.score > 0.6 ? 'secondary' : 'default'}>{alert.score.toFixed(2)}</Badge>
-            </div>
-          </div>
-          <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">Evidence</p>
-            <p className="text-sm font-mono bg-muted p-2 rounded-md">{alert.evidence}</p>
-          </div>
-          
-          <Separator />
-          
-          <ScoreExplainer alert={alert} />
-
-          <Separator />
-          
-          <div>
-            <h3 className="text-md font-semibold mb-2">Analyst Notes</h3>
-            <Textarea placeholder="Add investigation notes here..." rows={4} />
-          </div>
-        </div>
-        <DialogFooter className="sm:justify-between">
-           <Button variant="secondary" onClick={handleDownloadReport} disabled={!report}>
-              <Download className="mr-2 h-4 w-4" />
-              Download Full Report
-            </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => updateAlertStatus(alert.id, 'Investigating')}>Mark as Investigating</Button>
-            <Button onClick={() => updateAlertStatus(alert.id, 'Resolved')}>Resolve Alert</Button>
-          </div>
-        </DialogFooter>
+        {!isGeneratingReport && report && (
+          <Tabs defaultValue="report" className="py-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="report"><FileText className="mr-2"/> Full Report</TabsTrigger>
+              <TabsTrigger value="analyzer"><Activity className="mr-2"/>Score Analyzer</TabsTrigger>
+            </TabsList>
+            <TabsContent value="report">
+              <Card>
+                <CardHeader>
+                    <div className='flex items-center justify-between'>
+                         <CardTitle className="text-lg">AI Generated Incident Report</CardTitle>
+                         <Button variant="secondary" size="sm" onClick={handleDownloadReport} disabled={!report}>
+                            <Download className="mr-2 h-4 w-4" />
+                            Download Markdown
+                        </Button>
+                    </div>
+                     <CardContent className="p-4 pt-2 border rounded-lg bg-background max-h-[50vh] overflow-y-auto">
+                        <Markdown content={report} />
+                     </CardContent>
+                </CardHeader>
+              </Card>
+            </TabsContent>
+            <TabsContent value="analyzer">
+                <div className="p-1">
+                    <ScoreExplainer alert={alert} />
+                </div>
+            </TabsContent>
+          </Tabs>
+        )}
+        
+        {!isGeneratingReport && (
+            <DialogFooter className="sm:justify-between mt-4">
+                <div>
+                     <h3 className="text-md font-semibold mb-2">Analyst Notes</h3>
+                     <Textarea placeholder="Add investigation notes here..." rows={2} />
+                </div>
+                <div className="flex gap-2 items-end">
+                    <Button variant="outline" onClick={() => { updateAlertStatus(alert.id, 'Investigating'); setIsOpen(false); }}>Mark as Investigating</Button>
+                    <Button onClick={() => { updateAlertStatus(alert.id, 'Resolved'); setIsOpen(false); }}>Resolve Alert</Button>
+                </div>
+            </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

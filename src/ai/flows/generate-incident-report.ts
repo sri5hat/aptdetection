@@ -32,7 +32,7 @@ const GenerateIncidentReportInputSchema = z.object({
 export type GenerateIncidentReportInput = z.infer<typeof GenerateIncidentReportInputSchema>;
 
 const GenerateIncidentReportOutputSchema = z.object({
-  report: z.string().describe('The full, formatted incident report as a single string.'),
+  report: z.string().describe('The full, formatted incident report as a single Markdown string.'),
   justification: z.string().describe('A concise, single-sentence, human-readable justification for the alert, explaining *why* it is suspicious.')
 });
 
@@ -61,6 +61,14 @@ const getThreatIntelTool = ai.defineTool(
     outputSchema: LookupThreatIntelOutputSchema,
   },
   async ({ ip }) => {
+    // Only lookup public IPs
+    if (ip.startsWith('10.') || ip.startsWith('192.168.') || ip === '-') {
+      return {
+        isMalicious: false,
+        knownFor: [],
+        reportSummary: 'This is an internal or unassigned IP address; no external threat intel is available.',
+      };
+    }
     return await lookupThreatIntel({ indicator: ip });
   }
 );
@@ -74,46 +82,48 @@ const prompt = ai.definePrompt({
   prompt: `You are a Tier 1 SOC Analyst responsible for writing initial incident reports and providing clear alert justifications.
   
   An alert has been triggered. Your tasks are:
-  1. Generate a detailed incident report based on the alert data provided.
+  1. Generate a detailed incident report in **Markdown format** based on the alert data provided.
   2. Provide a concise, single-sentence, human-readable justification for the alert, explaining *why* it's suspicious based on its evidence and top features. Start the justification directly, without any preamble like "This alert is...".
   
-  Use the 'getThreatIntelForIp' tool to enrich the source IP address ({{{alert.srcIp}}}) with threat intelligence data.
+  Use the 'getThreatIntelForIp' tool to enrich the source IP address ({{{alert.srcIp}}}) with threat intelligence data if it's a public IP.
   
-  **Incident Report Template:**
+  **Incident Report Markdown Template:**
   
-  [Incident Summary]
-  Title: Alert: {{{alert.alertType}}} on {{{alert.host}}}
-  Date/Time: {{{alert.time}}}
-  Severity: [Determine based on score: >0.85 = High, >0.6 = Medium, else = Low]
-  Detection Source: ExfilSense Platform
+  # Incident Report: {{{alert.alertType}}} on {{{alert.host}}}
   
-  [Event Details]
-  Alert ID: {{{alert.id}}}
-  Host: {{{alert.host}}}
-  User: [Extract from evidence if available, otherwise "N/A"]
-  Source IP: {{{alert.srcIp}}}
-  Destination IP: {{{alert.dstIp}}}
-  MITRE ATT&CK: {{{alert.mitreTactic}}} ({{alert.alertType}})
+  ## Summary
+  - **Title**: Alert: {{{alert.alertType}}} on {{{alert.host}}}
+  - **Date/Time**: {{{alert.time}}}
+  - **Severity**: [Determine based on score: >0.85 = High, >0.6 = Medium, else = Low]
+  - **Detection Source**: ExfilSense Platform
   
-  [Evidence]
-  - Raw Evidence: {{{alert.evidence}}}
-  - Alert Score: {{{alert.score}}}
-  - Top Contributing Features: {{#each alert.topFeatures}}{{{this}}}{{#unless @last}}, {{/unless}}{{/each}}
-  - Threat Intel on Source IP: [Summarize the findings from the getThreatIntelForIp tool. Mention if it's malicious and what it's known for.]
+  ## Event Details
+  - **Alert ID**: \`{{{alert.id}}}\`
+  - **Host**: \`{{{alert.host}}}\`
+  - **User**: [Extract from evidence if available, otherwise "N/A"]
+  - **Source IP**: \`{{{alert.srcIp}}}\`
+  - **Destination IP**: \`{{{alert.dstIp}}}\`
+  - **MITRE ATT&CK**: [{{{alert.mitreTactic}}}](https://attack.mitre.org/tactics/{{alert.mitreTactic}})
   
-  [Actions Taken]
+  ## Evidence
+  - **Raw Evidence**: \`{{{alert.evidence}}}\`
+  - **Alert Score**: **{{{alert.score}}}**
+  - **Top Contributing Features**: {{#each alert.topFeatures}}\`{{{this}}}\`{{#unless @last}}, {{/unless}}{{/each}}
+  - **Threat Intel on Source IP**: [Summarize the findings from the getThreatIntelForIp tool. Mention if it's malicious and what it's known for.]
+  
+  ## Actions Taken
   - Alert triggered and ingested for review.
   - Threat intelligence lookup performed on source IP.
   - No automated response actions taken.
   
-  [Recommendation]
+  ## Recommendation
   - Analyst to review the alert and associated evidence.
   - If confirmed malicious, escalate to SOC L2.
   - Consider blocking the source IP at the firewall if the activity is deemed hostile.
   
-  [Escalation]
-  Escalated to: SOC L1 (Pending Review)
-  Ticket ID: [Leave as "Pending Triage"]
+  ## Escalation
+  - **Escalated to**: SOC L1 (Pending Review)
+  - **Ticket ID**: Pending Triage
   `,
 });
 
