@@ -1,3 +1,4 @@
+
 // This is a server-side file!
 'use server';
 
@@ -52,17 +53,17 @@ const LookupThreatIntelOutputSchema = z.object({
 });
 
 
-// Define a tool to get threat intel for the source IP
+// Define a tool to get threat intel for an IP
 const getThreatIntelTool = ai.defineTool(
   {
     name: 'getThreatIntelForIp',
-    description: 'Gets threat intelligence information for a given IP address.',
+    description: 'Gets threat intelligence information for a given IP address. Use this for both the source and destination IP addresses.',
     inputSchema: z.object({ ip: z.string() }),
     outputSchema: LookupThreatIntelOutputSchema,
   },
   async ({ ip }) => {
-    // Only lookup public IPs
-    if (ip.startsWith('10.') || ip.startsWith('192.168.') || ip === '-') {
+    // Do not perform lookups on internal or unassigned IPs
+    if (ip.startsWith('10.') || ip.startsWith('192.168.') || ip === '-' || ip.startsWith('127.')) {
       return {
         isMalicious: false,
         knownFor: [],
@@ -85,7 +86,7 @@ const prompt = ai.definePrompt({
   1. Generate a detailed incident report in **Markdown format** based on the alert data provided.
   2. Provide a concise, single-sentence, human-readable justification for the alert, explaining *why* it's suspicious based on its evidence and top features. Start the justification directly, without any preamble like "This alert is...".
   
-  Use the 'getThreatIntelForIp' tool to enrich the source IP address ({{{alert.srcIp}}}) with threat intelligence data if it's a public IP.
+  Use the 'getThreatIntelForIp' tool to enrich BOTH the source IP address ({{{alert.srcIp}}}) AND the destination IP address ({{{alert.dstIp}}}) with threat intelligence data if they are public IPs.
   
   **Incident Report Markdown Template:**
   
@@ -105,15 +106,18 @@ const prompt = ai.definePrompt({
   - **Destination IP**: \`{{{alert.dstIp}}}\`
   - **MITRE ATT&CK**: [{{{alert.mitreTactic}}}](https://attack.mitre.org/tactics/{{alert.mitreTactic}})
   
+  ## Intelligence Analysis
+  - **Threat Intel on Source IP ({{{alert.srcIp}}})**: [Summarize the findings from the getThreatIntelForIp tool. Mention if it's malicious and what it's known for.]
+  - **Threat Intel on Destination IP ({{{alert.dstIp}}})**: [Summarize the findings from the getThreatIntelForIp tool. Mention if it's malicious and what it's known for.]
+
   ## Evidence
   - **Raw Evidence**: \`{{{alert.evidence}}}\`
   - **Alert Score**: **{{{alert.score}}}**
   - **Top Contributing Features**: {{#each alert.topFeatures}}\`{{{this}}}\`{{#unless @last}}, {{/unless}}{{/each}}
-  - **Threat Intel on Source IP**: [Summarize the findings from the getThreatIntelForIp tool. Mention if it's malicious and what it's known for.]
   
   ## Actions Taken
   - Alert triggered and ingested for review.
-  - Threat intelligence lookup performed on source IP.
+  - Threat intelligence lookup performed on source and destination IPs.
   - No automated response actions taken.
   
   ## Recommendation

@@ -82,14 +82,6 @@ function SidebarNav() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-           <SidebarMenuButton asChild isActive={pathname === '/incidents'}>
-            <Link href="/incidents">
-              <GitBranch />
-              Incidents
-            </Link>
-          </SidebarMenuButton>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
           <SidebarMenuButton asChild isActive={pathname === '/threat-intel'}>
             <Link href="/threat-intel">
               <Rss />
