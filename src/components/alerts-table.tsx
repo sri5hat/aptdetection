@@ -1,7 +1,7 @@
 
 'use client';
 
-import { ArrowDown, ArrowUp } from 'lucide-react';
+import { ArrowDown, ArrowUp, ExternalLink } from 'lucide-react';
 import {
   Table,
   TableHeader,
@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from './ui/select';
 import { useEffect, useState } from 'react';
+import { TACTIC_NAMES } from '@/lib/mitre-data';
+
 
 interface AlertsTableProps {
   alerts: Alert[];
@@ -116,7 +118,17 @@ export function AlertsTable({
                   {alert.score.toFixed(2)}
                 </Badge>
               </TableCell>
-              <TableCell>{alert.mitreTactic}</TableCell>
+              <TableCell>
+                 <a
+                  href={`https://attack.mitre.org/tactics/${alert.mitreTactic}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 text-primary underline-offset-4 hover:underline"
+                >
+                  {TACTIC_NAMES[alert.mitreTactic as keyof typeof TACTIC_NAMES] || alert.mitreTactic}
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              </TableCell>
               <TableCell>{alert.srcIp}</TableCell>
               <TableCell>{alert.dstIp}</TableCell>
               <TableCell className="max-w-[200px] truncate">

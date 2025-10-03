@@ -29,6 +29,8 @@ import {
   ChartContainer,
   ChartTooltipContent,
 } from '@/components/ui/chart';
+import { TACTIC_NAMES } from '@/lib/mitre-data';
+
 
 const CHART_COLORS = {
   primary: 'hsl(var(--primary))',
@@ -80,7 +82,8 @@ export default function MetricsPage() {
   const tacticData = useMemo(() => {
     const data: { [key: string]: number } = {};
     alerts.forEach((alert) => {
-      data[alert.mitreTactic] = (data[alert.mitreTactic] || 0) + 1;
+      const tacticName = TACTIC_NAMES[alert.mitreTactic as keyof typeof TACTIC_NAMES] || alert.mitreTactic;
+      data[tacticName] = (data[tacticName] || 0) + 1;
     });
     return Object.entries(data)
       .map(([name, value]) => ({ name, alerts: value }))
@@ -153,7 +156,7 @@ export default function MetricsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>MITRE ATT&CK Tactic Breakdown</CardTitle>
+            <CardTitle>MITRE ATT&amp;CK Tactic Breakdown</CardTitle>
             <CardDescription>
               Most common adversary tactics observed.
             </CardDescription>

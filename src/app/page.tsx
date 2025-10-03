@@ -25,15 +25,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { TACTIC_NAMES } from '@/lib/mitre-data';
 
-const MITRE_TACTICS = [
-  'Exfiltration',
-  'Collection',
-  'Initial Access',
-  'Lateral Movement',
-  'Persistence',
-  'Discovery',
-];
+const MITRE_TACTICS = Object.keys(TACTIC_NAMES) as (keyof typeof TACTIC_NAMES)[];
+
 const ALERT_TYPES = [
   'DataExfiltration',
   'DNSExfiltration',
@@ -195,7 +190,7 @@ export default function DashboardPage() {
                     checked={filters.tactics.includes(tactic)}
                     onCheckedChange={() => handleFilterChange('tactics', tactic)}
                   >
-                    {tactic}
+                    {TACTIC_NAMES[tactic]}
                   </DropdownMenuCheckboxItem>
                 ))}
                 <DropdownMenuSeparator />

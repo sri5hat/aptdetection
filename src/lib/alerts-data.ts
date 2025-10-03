@@ -7,7 +7,7 @@ export const initialAlerts: Alert[] = [
     host: 'WIN-CLIENT-01',
     alertType: 'NetworkAnomaly',
     score: 0.92,
-    mitreTactic: 'Exfiltration',
+    mitreTactic: 'TA0010', // Exfiltration
     srcIp: '10.0.0.5',
     dstIp: '93.184.216.34',
     evidence: 'bytes=180432; s3_upload=yes',
@@ -24,7 +24,7 @@ export const initialAlerts: Alert[] = [
     host: 'WIN-CLIENT-01',
     alertType: 'ProcessAnomaly',
     score: 0.87,
-    mitreTactic: 'Initial Access',
+    mitreTactic: 'TA0001', // Initial Access
     srcIp: '10.0.0.5',
     dstIp: '-',
     evidence: 'winword -> powershell -> curl',
@@ -41,7 +41,7 @@ export const initialAlerts: Alert[] = [
     host: 'DB-SERVER-01',
     alertType: 'LateralMovement',
     score: 0.76,
-    mitreTactic: 'Lateral Movement',
+    mitreTactic: 'TA0008', // Lateral Movement
     srcIp: '10.0.0.8',
     dstIp: '10.0.0.12',
     evidence: 'smb auth failed then success',
@@ -58,7 +58,7 @@ export const initialAlerts: Alert[] = [
     host: 'WORKSTATION-05',
     alertType: 'Beaconing',
     score: 0.64,
-    mitreTactic: 'Persistence',
+    mitreTactic: 'TA0003', // Persistence
     srcIp: '10.0.0.14',
     dstIp: '198.51.100.10',
     evidence: 'periodic 60s dns TXT requests',
@@ -75,7 +75,7 @@ export const initialAlerts: Alert[] = [
     host: 'WIN-CLIENT-01',
     alertType: 'FileAccess',
     score: 0.55,
-    mitreTactic: 'Discovery',
+    mitreTactic: 'TA0005', // Discovery
     srcIp: '-',
     dstIp: '-',
     evidence: 'many read ops on C:\\\\Secrets',

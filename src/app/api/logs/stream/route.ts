@@ -32,7 +32,7 @@ const scenario = [
       alertType: 'FileStaging',
       host: scenarioHost,
       score: 0.78,
-      mitreTactic: 'Collection',
+      mitreTactic: 'TA0009', // Collection
       evidence: `powershell.exe used to create archive ${stagingFile}`,
       topRuleHits: ['Suspicious Compression Activity'],
       topFeatures: ['process:powershell.exe', 'cmdline:Compress-Archive', `file_path:${stagingFile}`],
@@ -45,7 +45,7 @@ const scenario = [
       alertType: 'DataExfiltration',
       host: scenarioHost,
       score: 0.95,
-      mitreTactic: 'Exfiltration',
+      mitreTactic: 'TA0010', // Exfiltration
       evidence: `Large upload (12.5MB) to ${exfilDomain} (${exfilIp})`,
       topRuleHits: ['Exfiltration to File Sharing Site', 'Anomalous Data Transfer Size'],
       topFeatures: [`dst_ip:${exfilIp}`, 'bytes_sent>10MB', `domain:${exfilDomain}`],
@@ -59,7 +59,7 @@ const scenario = [
       alertType: 'DNSExfiltration',
       host: scenarioHost,
       score: 0.88,
-      mitreTactic: 'Exfiltration',
+      mitreTactic: 'TA0010', // Exfiltration
       evidence: `Anomalous DNS query pattern detected to ${dnsExfilDomain}`,
       topRuleHits: ['DNS Tunneling Heuristic', 'High-entropy Subdomain'],
       topFeatures: [`domain:${dnsExfilDomain}`, 'query_length>64', 'entropy_level:high'],
@@ -90,7 +90,7 @@ function emitAlert(partialAlert: Partial<Alert>) {
         host: 'unknown',
         alertType: 'NetworkAnomaly',
         score: 0.5,
-        mitreTactic: 'Discovery',
+        mitreTactic: 'TA0005', // Discovery
         srcIp: `10.0.1.${Math.floor(Math.random() * 254) + 1}`,
         dstIp: `203.0.113.${Math.floor(Math.random() * 254) + 1}`,
         evidence: 'N/A',

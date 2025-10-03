@@ -1,13 +1,20 @@
 export type AlertStatus = 'New' | 'Investigating' | 'Resolved';
 
+/**
+ * MITRE ATT&CK Tactic IDs
+ * @see https://attack.mitre.org/tactics/enterprise/
+ */
 export type MitreTactic =
-  | 'Exfiltration'
-  | 'Initial Access'
-  | 'Lateral Movement'
-  | 'Persistence'
-  | 'Discovery'
-  | 'Collection'
-  | 'Command and Control';
+  | 'TA0010' // Exfiltration
+  | 'TA0001' // Initial Access
+  | 'TA0008' // Lateral Movement
+  | 'TA0003' // Persistence
+  | 'TA0005' // Discovery
+  | 'TA0009' // Collection
+  | 'TA0011' // Command and Control
+  | 'TA0002' // Execution
+  | 'TA0007'; // Privilege Escalation
+
 
 export type AlertType =
   | 'DataExfiltration'
