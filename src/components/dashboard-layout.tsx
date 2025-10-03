@@ -74,9 +74,11 @@ function SidebarNav() {
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
-          <SidebarMenuButton href="#">
-            <BarChart />
-            Metrics
+          <SidebarMenuButton asChild isActive={pathname === '/metrics'}>
+            <Link href="/metrics">
+              <BarChart />
+              Metrics
+            </Link>
           </SidebarMenuButton>
         </SidebarMenuItem>
         <SidebarMenuItem>
