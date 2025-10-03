@@ -1,4 +1,4 @@
-import { type Alert } from '@/lib/types';
+import { type Alert, type AlertType, type MitreTactic } from '@/lib/types';
 import { logEmitter } from '@/lib/log-emitter';
 
 const hosts = ['WIN-CLIENT-02', 'WEB-SERVER-03', 'LINUX-VM-07', 'DEV-STATION-11', 'DB-SERVER-01'];
